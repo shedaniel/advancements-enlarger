@@ -1,11 +1,12 @@
 {
   "required": true,
-  "package": "net.fabricmc.example.mixin",
+  "package": "me.shedaniel.advancementsenlarger.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
   ],
   "client": [
-    "ExampleMixin"
+    "MixinMinecraftClient",
+    "MixinAdvancementTabType"
   ],
   "injectors": {
     "defaultRequire": 1
