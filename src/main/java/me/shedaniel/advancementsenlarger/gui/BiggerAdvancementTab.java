@@ -21,8 +21,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
-import javax.annotation.Nullable;
-import java.util.Iterator;
 import java.util.Map;
 
 @Environment(EnvType.CLIENT)
@@ -59,22 +57,18 @@ public class BiggerAdvancementTab extends DrawableHelper {
         this.addWidget(this.rootWidget, root);
     }
     
-    @Nullable
     public static BiggerAdvancementTab create(MinecraftClient minecraft, BiggerAdvancementsScreen screen, int index, Advancement root)
             throws ClassNotFoundException {
-        if (root.getDisplay() == null) {
-            return null;
-        } else {
+        if (root.getDisplay() != null) {
             Object[] var4 = Class.forName(FabricLoader.getInstance().getMappingResolver().mapClassName("intermediary", "net.minecraft.class_453")).getEnumConstants();
             int var5 = var4.length;
             
-            for(int var6 = 0; var6 < var5; ++var6) {
-                AdvancementTabTypeHooks advancementTabType = (AdvancementTabTypeHooks) var4[var6];
+            for (Object o : var4) {
+                AdvancementTabTypeHooks advancementTabType = (AdvancementTabTypeHooks) o;
                 return new BiggerAdvancementTab(minecraft, screen, advancementTabType, index, root, root.getDisplay());
             }
-            
-            return null;
         }
+        return null;
     }
     
     public Advancement getRoot() {
@@ -93,12 +87,13 @@ public class BiggerAdvancementTab extends DrawableHelper {
         this.type.ae_drawIcon(x, y, this.index, itemRenderer, this.icon);
     }
     
+    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     public void render() {
         int width = screen.width - 34;
         int height = screen.height - 68;
         if (!this.initialized) {
-            this.originX = (double) (width / 2 - (this.maxPanX + this.minPanX) / 2);
-            this.originY = (double) (height / 2 - (this.maxPanY + this.minPanY) / 2);
+            this.originX = width / 2 - (this.maxPanX + this.minPanX) / 2;
+            this.originY = height / 2 - (this.maxPanY + this.minPanY) / 2;
             this.initialized = true;
         }
         
@@ -124,9 +119,9 @@ public class BiggerAdvancementTab extends DrawableHelper {
         int k = i % 16;
         int l = j % 16;
         
-        for(int m = -1; m <= MathHelper.ceil(width / 16f) + 1; ++m) {
-            for(int n = -1; n <= MathHelper.ceil(height / 16f) + 1; ++n) {
-                blit(k + 16 * m, l + 16 * n, 0.0F, 0.0F, 16, 16, 16, 16);
+        for (int m = -1; m <= MathHelper.ceil(width / 16f) + 1; ++m) {
+            for (int n = -1; n <= MathHelper.ceil(height / 16f) + 1; ++n) {
+                drawTexture(k + 16 * m, l + 16 * n, 0.0F, 0.0F, 16, 16, 16, 16);
             }
         }
         
@@ -153,10 +148,7 @@ public class BiggerAdvancementTab extends DrawableHelper {
         int i = MathHelper.floor(this.originX);
         int j = MathHelper.floor(this.originY);
         if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
-            Iterator var8 = this.widgets.values().iterator();
-            
-            while (var8.hasNext()) {
-                BiggerAdvancementWidget advancementWidget = (BiggerAdvancementWidget) var8.next();
+            for (BiggerAdvancementWidget advancementWidget : this.widgets.values()) {
                 if (advancementWidget.shouldRender(i, j, mouseX, mouseY)) {
                     bl = true;
                     advancementWidget.drawTooltip(i, j, this.alpha, x, y);
@@ -194,11 +186,11 @@ public class BiggerAdvancementTab extends DrawableHelper {
         int width = screen.width - 34;
         int height = screen.height - 68;
         if (this.maxPanX - this.minPanX > width) {
-            this.originX = MathHelper.clamp(this.originX + offsetX, (double) (-(this.maxPanX - width)), 0.0D);
+            this.originX = MathHelper.clamp(this.originX + offsetX, -(this.maxPanX - width), 0.0D);
         }
         
         if (this.maxPanY - this.minPanY > height) {
-            this.originY = MathHelper.clamp(this.originY + offsetY, (double) (-(this.maxPanY - height)), 0.0D);
+            this.originY = MathHelper.clamp(this.originY + offsetY, -(this.maxPanY - height), 0.0D);
         }
         
     }
@@ -220,18 +212,14 @@ public class BiggerAdvancementTab extends DrawableHelper {
         this.maxPanX = Math.max(this.maxPanX, j);
         this.minPanY = Math.min(this.minPanY, k);
         this.maxPanY = Math.max(this.maxPanY, l);
-        Iterator var7 = this.widgets.values().iterator();
         
-        while (var7.hasNext()) {
-            BiggerAdvancementWidget advancementWidget = (BiggerAdvancementWidget) var7.next();
+        for (BiggerAdvancementWidget advancementWidget : this.widgets.values()) {
             advancementWidget.addToTree();
         }
-        
     }
     
-    @Nullable
     public BiggerAdvancementWidget getWidget(Advancement advancement) {
-        return (BiggerAdvancementWidget) this.widgets.get(advancement);
+        return this.widgets.get(advancement);
     }
     
     public BiggerAdvancementsScreen getScreen() {

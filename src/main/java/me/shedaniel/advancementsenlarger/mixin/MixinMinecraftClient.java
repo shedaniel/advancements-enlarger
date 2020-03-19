@@ -17,8 +17,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
-
 /**
  * Code taken from FabricControlling because I am too lazy to write it.
  * Source: https://github.com/jaredlll08/Fabric-Controlling/blob/master/LICENSE
@@ -26,7 +24,7 @@ import javax.annotation.Nullable;
  */
 @Mixin(MinecraftClient.class)
 public class MixinMinecraftClient {
-    @Shadow @Nullable public ClientPlayerEntity player;
+    @Shadow public ClientPlayerEntity player;
     
     @Inject(method = "openScreen", at = @At("HEAD"))
     private void dummyGenerateRefmap(Screen screen, CallbackInfo ci) {
@@ -36,7 +34,7 @@ public class MixinMinecraftClient {
     @ModifyVariable(method = "openScreen", at = @At("HEAD"), argsOnly = true)
     private Screen openScreen(Screen screen) {
         if (screen != null && AdvancementsScreen.class == screen.getClass())
-            return new BiggerAdvancementsScreen(player.networkHandler.getAdvancementHandler(), (AdvancementsScreen) screen);
+            return new BiggerAdvancementsScreen(player.networkHandler.getAdvancementHandler());
         return screen;
     }
 }

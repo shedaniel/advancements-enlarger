@@ -11,7 +11,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.advancement.AdvancementsScreen;
 import net.minecraft.client.network.ClientAdvancementManager;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.render.BufferBuilder;
@@ -19,14 +18,13 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.NarratorManager;
-import net.minecraft.server.network.packet.AdvancementTabC2SPacket;
+import net.minecraft.network.packet.c2s.play.AdvancementTabC2SPacket;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Lazy;
 
-import javax.annotation.Nullable;
-import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 
 public class BiggerAdvancementsScreen extends Screen implements ClientAdvancementManager.Listener {
     private static final Identifier WINDOW_TEXTURE = new Identifier("advancements-enlarger:textures/gui/advancements/recipecontainer.png");
@@ -36,28 +34,27 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
     private final ClientAdvancementManager advancementHandler;
     private final Map<Advancement, BiggerAdvancementTab> tabs = Maps.newLinkedHashMap();
     private BiggerAdvancementTab selectedTab;
-    private AdvancementsScreen screen;
     private boolean movingTab;
     private Lazy<Boolean> reiExists = new Lazy<>(() -> FabricLoader.getInstance().isModLoaded("roughlyenoughitems"));
-    private Lazy<Method> darkModeMethod = new Lazy<>(() -> {
+    private BooleanSupplier darkMode = () -> {
         if (!reiExists.get())
-            return null;
+            return false;
         try {
-            return Class.forName("me.shedaniel.rei.impl.ScreenHelper").getDeclaredMethod("isDarkModeEnabled");
-        } catch (Throwable e) {
+            Object reiHelper = Class.forName("me.shedaniel.rei.api.REIHelper").getDeclaredMethod("getInstance").invoke(null);
+            return (boolean) Class.forName("me.shedaniel.rei.api.REIHelper").getDeclaredMethod("isDarkThemeEnabled").invoke(reiHelper);
+        } catch (Throwable ignored) {
         }
-        return null;
-    });
+        return false;
+    };
     
-    public BiggerAdvancementsScreen(ClientAdvancementManager clientAdvancementManager, AdvancementsScreen screen) {
+    public BiggerAdvancementsScreen(ClientAdvancementManager clientAdvancementManager) {
         super(NarratorManager.EMPTY);
         this.advancementHandler = clientAdvancementManager;
-        this.screen = screen;
     }
     
     private boolean isDarkMode() {
         try {
-            return darkModeMethod.get() != null && (boolean) darkModeMethod.get().invoke(null);
+            return darkMode.getAsBoolean();
         } catch (Throwable e) {
             return false;
         }
@@ -76,8 +73,8 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
     }
     
     public void removed() {
-        this.advancementHandler.setListener((ClientAdvancementManager.Listener) null);
-        ClientPlayNetworkHandler clientPlayNetworkHandler = this.minecraft.getNetworkHandler();
+        this.advancementHandler.setListener(null);
+        ClientPlayNetworkHandler clientPlayNetworkHandler = this.client.getNetworkHandler();
         if (clientPlayNetworkHandler != null) {
             clientPlayNetworkHandler.sendPacket(AdvancementTabC2SPacket.close());
         }
@@ -96,10 +93,8 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         if (button == 0) {
             int i = 8;
             int j = 33;
-            Iterator var8 = this.tabs.values().iterator();
             
-            while (var8.hasNext()) {
-                BiggerAdvancementTab advancementTab = (BiggerAdvancementTab) var8.next();
+            for (BiggerAdvancementTab advancementTab : this.tabs.values()) {
                 if (advancementTab.isClickOnTab(i, j, mouseX, mouseY)) {
                     this.advancementHandler.selectTab(advancementTab.getRoot(), true);
                     break;
@@ -111,9 +106,9 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.minecraft.options.keyAdvancements.matchesKey(keyCode, scanCode)) {
-            this.minecraft.openScreen((Screen) null);
-            this.minecraft.mouse.lockCursor();
+        if (this.client.options.keyAdvancements.matchesKey(keyCode, scanCode)) {
+            this.client.openScreen(null);
+            this.client.mouse.lockCursor();
             return true;
         } else {
             return super.keyPressed(keyCode, scanCode, modifiers);
@@ -144,14 +139,15 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         }
     }
     
+    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     private void drawAdvancementTree(int mouseX, int mouseY, int x, int i) {
         BiggerAdvancementTab advancementTab = this.selectedTab;
         if (advancementTab == null) {
             fill(x + 9, i + 18, width - 9, height - 17, -16777216);
             String string = I18n.translate("advancements.empty");
-            int j = this.font.getStringWidth(string);
-            font.draw(string, (width - j) / 2, (height - 33) / 2 + 33 - 9 / 2, -1);
-            font.draw(":(", (width - this.font.getStringWidth(":(")) / 2, (height - 33) / 2 + 33 + 9 + 9 / 2, -1);
+            int j = this.textRenderer.getStringWidth(string);
+            textRenderer.draw(string, (width - j) / 2, (height - 33) / 2 + 33 - 9 / 2, -1);
+            textRenderer.draw(":(", (width - this.textRenderer.getStringWidth(":(")) / 2, (height - 33) / 2 + 33 + 9 + 9 / 2, -1);
         } else {
             RenderSystem.pushMatrix();
             RenderSystem.translatef((float) (x + 9), (float) (i + 18), 0.0F);
@@ -167,12 +163,12 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         RenderSystem.enableBlend();
         drawWindow(x, i);
         if (this.tabs.size() > 1) {
-            this.minecraft.getTextureManager().bindTexture(isDarkMode() ? TABS_DARK_TEXTURE : TABS_TEXTURE);
-            Iterator var3 = this.tabs.values().iterator();
+            this.client.getTextureManager().bindTexture(isDarkMode() ? TABS_DARK_TEXTURE : TABS_TEXTURE);
+            Iterator<BiggerAdvancementTab> var3 = this.tabs.values().iterator();
             
             BiggerAdvancementTab advancementTab2;
             while (var3.hasNext()) {
-                advancementTab2 = (BiggerAdvancementTab) var3.next();
+                advancementTab2 = var3.next();
                 advancementTab2.drawBackground(x, i, advancementTab2 == this.selectedTab);
             }
             
@@ -181,37 +177,37 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
             var3 = this.tabs.values().iterator();
             
             while (var3.hasNext()) {
-                advancementTab2 = (BiggerAdvancementTab) var3.next();
+                advancementTab2 = var3.next();
                 advancementTab2.drawIcon(x, i, this.itemRenderer);
             }
             
             RenderSystem.disableBlend();
         }
         
-        this.font.draw(I18n.translate("gui.advancements"), (float) (x + 8), (float) (i + 6), isDarkMode() ? -1 : 4210752);
+        this.textRenderer.draw(I18n.translate("gui.advancements"), (float) (x + 8), (float) (i + 6), isDarkMode() ? -1 : 4210752);
     }
     
     private void drawWindow(int x, int y) {
         boolean darkMode = isDarkMode();
-        this.minecraft.getTextureManager().bindTexture(!darkMode ? WINDOW_TEXTURE : WINDOW_DARK_TEXTURE);
+        this.client.getTextureManager().bindTexture(!darkMode ? WINDOW_TEXTURE : WINDOW_DARK_TEXTURE);
         int width = this.width - 16;
         int height = this.height - 41;
         //Four Corners
-        this.blit(x, y, 106, 124 + 66, 4, 4);
-        this.blit(x + width - 4, y, 252, 124 + 66, 4, 4);
-        this.blit(x, y + height - 4, 106, 186 + 66, 4, 4);
-        this.blit(x + width - 4, y + height - 4, 252, 186 + 66, 4, 4);
+        this.drawTexture(x, y, 106, 124 + 66, 4, 4);
+        this.drawTexture(x + width - 4, y, 252, 124 + 66, 4, 4);
+        this.drawTexture(x, y + height - 4, 106, 186 + 66, 4, 4);
+        this.drawTexture(x + width - 4, y + height - 4, 252, 186 + 66, 4, 4);
         
         //Sides
-        for(int xx = 4; xx < width - 4; xx += 128) {
+        for (int xx = 4; xx < width - 4; xx += 128) {
             int thisWidth = Math.min(128, width - 4 - xx);
-            this.blit(x + xx, y, 110, 124 + 66, thisWidth, 4);
-            this.blit(x + xx, y + height - 4, 110, 186 + 66, thisWidth, 4);
+            this.drawTexture(x + xx, y, 110, 124 + 66, thisWidth, 4);
+            this.drawTexture(x + xx, y + height - 4, 110, 186 + 66, thisWidth, 4);
         }
-        for(int yy = 4; yy < height - 4; yy += 50) {
+        for (int yy = 4; yy < height - 4; yy += 50) {
             int thisHeight = Math.min(50, height - 4 - yy);
-            this.blit(x, y + yy, 106, 128 + 66, 4, thisHeight);
-            this.blit(x + width - 4, y + yy, 252, 128 + 66, 4, thisHeight);
+            this.drawTexture(x, y + yy, 106, 128 + 66, 4, thisHeight);
+            this.drawTexture(x + width - 4, y + yy, 252, 128 + 66, 4, thisHeight);
         }
         int color = darkMode ? -13750738 : -3750202;
         fillGradient(x + 4, y + 4, x + width - 4, y + 18, color, color);
@@ -226,28 +222,28 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
         bufferBuilder.begin(7, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(x + width - 9, y + 18, getBlitOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + 18, getBlitOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + 24, getBlitOffset()).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(x + width - 9, y + 24, getBlitOffset()).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9, y + 18, getZOffset()).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 9, y + 18, getZOffset()).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 9, y + 24, getZOffset()).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9, y + 24, getZOffset()).color(0, 0, 0, 0).next();
         tessellator.draw();
         bufferBuilder.begin(7, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(x + width - 9, y + height - 9, getBlitOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + height - 9, getBlitOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + height - 15, getBlitOffset()).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(x + width - 9, y + height - 15, getBlitOffset()).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9, y + height - 9, getZOffset()).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 9, y + height - 9, getZOffset()).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 9, y + height - 15, getZOffset()).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9, y + height - 15, getZOffset()).color(0, 0, 0, 0).next();
         tessellator.draw();
         bufferBuilder.begin(7, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(x + 15, y + 18, getBlitOffset()).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(x + 9, y + 18, getBlitOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + height - 9, getBlitOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 15, y + height - 9, getBlitOffset()).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + 15, y + 18, getZOffset()).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + 9, y + 18, getZOffset()).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 9, y + height - 9, getZOffset()).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 15, y + height - 9, getZOffset()).color(0, 0, 0, 0).next();
         tessellator.draw();
         bufferBuilder.begin(7, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(x + width - 15, y + 18, getBlitOffset()).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(x + width - 9, y + 18, getBlitOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + width - 9, y + height - 9, getBlitOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + width - 15, y + height - 9, getBlitOffset()).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 15, y + 18, getZOffset()).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9, y + 18, getZOffset()).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + width - 9, y + height - 9, getZOffset()).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + width - 15, y + height - 9, getZOffset()).color(0, 0, 0, 0).next();
         tessellator.draw();
         RenderSystem.shadeModel(7424);
         RenderSystem.disableBlend();
@@ -267,11 +263,8 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         }
         
         if (this.tabs.size() > 1) {
-            Iterator var5 = this.tabs.values().iterator();
-            
-            while (var5.hasNext()) {
-                BiggerAdvancementTab advancementTab = (BiggerAdvancementTab) var5.next();
-                if (advancementTab.isClickOnTab(x, y, (double) mouseX, (double) mouseY)) {
+            for (BiggerAdvancementTab advancementTab : this.tabs.values()) {
+                if (advancementTab.isClickOnTab(x, y, mouseX, mouseY)) {
                     this.renderTooltip(advancementTab.getTitle(), mouseX, mouseY);
                 }
             }
@@ -281,7 +274,7 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
     
     public void onRootAdded(Advancement root) {
         try {
-            BiggerAdvancementTab advancementTab = BiggerAdvancementTab.create(this.minecraft, this, this.tabs.size(), root);
+            BiggerAdvancementTab advancementTab = BiggerAdvancementTab.create(this.client, this, this.tabs.size(), root);
             if (advancementTab != null) {
                 this.tabs.put(root, advancementTab);
             }
@@ -314,7 +307,7 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
     }
     
     @Override
-    public void selectTab(@Nullable Advancement advancement) {
+    public void selectTab(Advancement advancement) {
         this.selectedTab = this.tabs.get(advancement);
     }
     
@@ -323,18 +316,16 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         this.selectedTab = null;
     }
     
-    @Nullable
     public BiggerAdvancementWidget getAdvancementWidget(Advancement advancement) {
         BiggerAdvancementTab advancementTab = this.getTab(advancement);
         return advancementTab == null ? null : advancementTab.getWidget(advancement);
     }
     
-    @Nullable
     private BiggerAdvancementTab getTab(Advancement advancement) {
         while (advancement.getParent() != null) {
             advancement = advancement.getParent();
         }
         
-        return (BiggerAdvancementTab) this.tabs.get(advancement);
+        return this.tabs.get(advancement);
     }
 }

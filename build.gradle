@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.2.6-SNAPSHOT'
+	id 'fabric-loom' version '0.2.7-SNAPSHOT'
 	id 'maven-publish'
 	id 'net.minecrell.licenser' version '0.4.1'
 }
@@ -41,11 +41,10 @@ dependencies {
     modRuntime ("io.github.prospector:modmenu:${project.modmenu_version}") {
         transitive = false
     }
-    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
-    compileOnly 'org.jetbrains:annotations:15.0'
-    modRuntime("com.lettuce.fudge:notenoughcrashes:${project.notenoughcrashes_version}") {
-        transitive = false
-    }
+    compileOnly 'org.jetbrains:annotations:19.0.0'
+//    modRuntime("com.lettuce.fudge:notenoughcrashes:${project.notenoughcrashes_version}") {
+//        transitive = false
+//    }
 }
 
 processResources {
