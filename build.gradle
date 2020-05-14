@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.2.7-SNAPSHOT'
+    id 'fabric-loom' version "0.4.13"
     id 'maven-publish'
     id 'net.minecrell.licenser' version '0.4.1'
 }
@@ -18,10 +18,14 @@ license {
 minecraft {
 }
 
+repositories {
+    maven { url "https://dl.bintray.com/shedaniel/legacy-yarn-updated" }
+}
+
 dependencies {
     //to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    mappings "me.shedaniel:legacy-yarn:${project.yarn_mappings}:v2"
     modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
@@ -35,10 +39,8 @@ dependencies {
     modRuntime("io.github.prospector:modmenu:${project.modmenu_version}") {
         transitive = false
     }
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
     compileOnly 'org.jetbrains:annotations:19.0.0'
-//    modRuntime("com.lettuce.fudge:notenoughcrashes:${project.notenoughcrashes_version}") {
-//        transitive = false
-//    }
 }
 
 processResources {

@@ -8,6 +8,8 @@ package me.shedaniel.advancementsenlarger.mixin;
 import me.shedaniel.advancementsenlarger.hooks.AdvancementTabTypeHooks;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.item.ItemRenderer;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,7 +29,7 @@ public abstract class MixinAdvancementTabType implements AdvancementTabTypeHooks
     @Shadow @Final private int height;
     
     @Override
-    public void ae_drawBackground(DrawableHelper drawable, int x, int y, boolean selected, int index) {
+    public void ae_drawBackground(MatrixStack matrices, DrawableHelper drawable, int x, int y, boolean selected, int index) {
         int i = this.u;
         if (index > 0) {
             i += this.width;
@@ -38,14 +40,18 @@ public abstract class MixinAdvancementTabType implements AdvancementTabTypeHooks
         }
         
         int j = selected ? this.v + this.height : this.v;
-        drawable.drawTexture(x + (this.width + 2) * index, y + -this.height + 4, i, j, this.width, this.height);
+        drawable.drawTexture(matrices, x + (this.width + 2) * index, y + -this.height + 4, i, j, this.width, this.height);
     }
     
     @Override
-    public void ae_drawIcon(int x, int y, int index, ItemRenderer itemRenderer, ItemStack icon) {
+    public void ae_drawIcon(MatrixStack matrices, int x, int y, int index, ItemRenderer itemRenderer, ItemStack icon) {
         int i = x + (this.width + 2) * index + 6;
         int j = y + -this.height + 4 + 9;
-        itemRenderer.renderGuiItem(null, icon, i, j);
+        Vector4f vector4f = new Vector4f(i, j, 0, 1.0F);
+        vector4f.transform(matrices.peek().getModel());
+        itemRenderer.zOffset += vector4f.getZ();
+        itemRenderer.renderGuiItem(icon, (int) vector4f.getX(), (int) vector4f.getY());
+        itemRenderer.zOffset += vector4f.getZ();
     }
     
     @Override
