@@ -50,7 +50,7 @@ public abstract class MixinAdvancementTabType implements AdvancementTabTypeHooks
         Vector4f vector4f = new Vector4f(i, j, 0, 1.0F);
         vector4f.transform(matrices.peek().getModel());
         itemRenderer.zOffset += vector4f.getZ();
-        itemRenderer.renderGuiItem(icon, (int) vector4f.getX(), (int) vector4f.getY());
+        itemRenderer.renderInGui(icon, (int) vector4f.getX(), (int) vector4f.getY());
         itemRenderer.zOffset += vector4f.getZ();
     }
     

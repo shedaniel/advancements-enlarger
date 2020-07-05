@@ -19,6 +19,7 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.advancement.AdvancementObtainedStatus;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.text.StringRenderable;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -37,9 +38,9 @@ public class BiggerAdvancementWidget extends DrawableHelper {
     private final BiggerAdvancementTab tab;
     private final Advancement advancement;
     private final AdvancementDisplay display;
-    private final Text title;
+    private final StringRenderable title;
     private final int width;
-    private final List<Text> description;
+    private final List<StringRenderable> description;
     private final MinecraftClient client;
     private final List<BiggerAdvancementWidget> children = Lists.newArrayList();
     private final int xPos;
@@ -62,23 +63,23 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         Text description = display.getDescription();
         this.description = this.wrapDescription(description, l);
         
-        Text string2;
-        for (Iterator<Text> var10 = this.description.iterator(); var10.hasNext(); l = Math.max(l, client.textRenderer.getWidth(string2))) {
+        StringRenderable string2;
+        for (Iterator<StringRenderable> var10 = this.description.iterator(); var10.hasNext(); l = Math.max(l, client.textRenderer.getWidth(string2))) {
             string2 = var10.next();
         }
         
         this.width = l + 3 + 5;
     }
     
-    private List<Text> wrapDescription(Text text, int width) {
+    private List<StringRenderable> wrapDescription(Text text, int width) {
         TextHandler textHandler = this.client.textRenderer.getTextHandler();
-        List<Text> list = null;
+        List<StringRenderable> list = null;
         float f = Float.MAX_VALUE;
         int[] var6 = field_24262;
         int var7 = var6.length;
         
         for (int i : var6) {
-            List<Text> list2 = textHandler.wrapLines(text, width - i, Style.EMPTY);
+            List<StringRenderable> list2 = textHandler.wrapLines(text, width - i, Style.EMPTY);
             float g = Math.abs(method_27572(textHandler, list2) - (float) width);
             if (g <= 10.0F) {
                 return list2;
@@ -93,8 +94,8 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         return list;
     }
     
-    private static float method_27572(TextHandler textHandler, List<Text> list) {
-        Stream<Text> var10000 = list.stream();
+    private static float method_27572(TextHandler textHandler, List<StringRenderable> list) {
+        Stream<StringRenderable> var10000 = list.stream();
         return (float) var10000.mapToDouble(textHandler::getWidth).max().orElse(0.0D);
     }
     
@@ -154,7 +155,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
             Vector4f vector4f = new Vector4f(x + this.xPos + 8, y + this.yPos + 5, 0, 1.0F);
             vector4f.transform(matrices.peek().getModel());
             this.client.getItemRenderer().zOffset += vector4f.getZ();
-            this.client.getItemRenderer().renderGuiItem(this.display.getIcon(), (int) vector4f.getX(), (int) vector4f.getY());
+            this.client.getItemRenderer().renderInGui(this.display.getIcon(), (int) vector4f.getX(), (int) vector4f.getY());
             this.client.getItemRenderer().zOffset -= vector4f.getZ();
         }
         
@@ -244,7 +245,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         int p;
         int var10003;
         TextRenderer var20;
-        Text var21;
+        StringRenderable var21;
         float var22;
         if (bl2) {
             for (p = 0; p < this.description.size(); ++p) {
@@ -267,7 +268,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         Vector4f vector4f = new Vector4f(originX + this.xPos + 8, originY + this.yPos + 5, 0, 1.0F);
         vector4f.transform(matrices.peek().getModel());
         this.client.getItemRenderer().zOffset += vector4f.getZ();
-        this.client.getItemRenderer().renderGuiItem(this.display.getIcon(), (int) vector4f.getX(), (int) vector4f.getY());
+        this.client.getItemRenderer().renderInGui(this.display.getIcon(), (int) vector4f.getX(), (int) vector4f.getY());
         this.client.getItemRenderer().zOffset -= vector4f.getZ();
     }
     
