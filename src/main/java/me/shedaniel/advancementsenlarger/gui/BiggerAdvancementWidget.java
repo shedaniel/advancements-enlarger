@@ -19,10 +19,12 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.advancement.AdvancementObtainedStatus;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.text.StringRenderable;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Language;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.Iterator;
@@ -38,9 +40,9 @@ public class BiggerAdvancementWidget extends DrawableHelper {
     private final BiggerAdvancementTab tab;
     private final Advancement advancement;
     private final AdvancementDisplay display;
-    private final StringRenderable title;
+    private final OrderedText title;
     private final int width;
-    private final List<StringRenderable> description;
+    private final List<OrderedText> description;
     private final MinecraftClient client;
     private final List<BiggerAdvancementWidget> children = Lists.newArrayList();
     private final int xPos;
@@ -53,7 +55,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         this.advancement = advancement;
         this.display = display;
         this.client = client;
-        this.title = client.textRenderer.trimToWidth(display.getTitle(), 163);
+        this.title = Language.getInstance().reorder(client.textRenderer.trimToWidth(display.getTitle(), 163));
         this.xPos = MathHelper.floor(display.getX() * 28.0F);
         this.yPos = MathHelper.floor(display.getY() * 27.0F);
         int i = advancement.getRequirementCount();
@@ -61,25 +63,25 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         int k = i > 1 ? client.textRenderer.getStringWidth("  ") + client.textRenderer.getStringWidth("0") * j * 2 + client.textRenderer.getStringWidth("/") : 0;
         int l = 29 + client.textRenderer.getWidth(this.title) + k;
         Text description = display.getDescription();
-        this.description = this.wrapDescription(description, l);
+        this.description = Language.getInstance().reorder(this.wrapDescription(description, l));
         
-        StringRenderable string2;
-        for (Iterator<StringRenderable> var10 = this.description.iterator(); var10.hasNext(); l = Math.max(l, client.textRenderer.getWidth(string2))) {
+        OrderedText string2;
+        for (Iterator<OrderedText> var10 = this.description.iterator(); var10.hasNext(); l = Math.max(l, client.textRenderer.getWidth(string2))) {
             string2 = var10.next();
         }
         
         this.width = l + 3 + 5;
     }
     
-    private List<StringRenderable> wrapDescription(Text text, int width) {
+    private List<StringVisitable> wrapDescription(Text text, int width) {
         TextHandler textHandler = this.client.textRenderer.getTextHandler();
-        List<StringRenderable> list = null;
+        List<StringVisitable> list = null;
         float f = Float.MAX_VALUE;
         int[] var6 = field_24262;
         int var7 = var6.length;
         
         for (int i : var6) {
-            List<StringRenderable> list2 = textHandler.wrapLines(text, width - i, Style.EMPTY);
+            List<StringVisitable> list2 = textHandler.wrapLines(text, width - i, Style.EMPTY);
             float g = Math.abs(method_27572(textHandler, list2) - (float) width);
             if (g <= 10.0F) {
                 return list2;
@@ -94,8 +96,8 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         return list;
     }
     
-    private static float method_27572(TextHandler textHandler, List<StringRenderable> list) {
-        Stream<StringRenderable> var10000 = list.stream();
+    private static float method_27572(TextHandler textHandler, List<StringVisitable> list) {
+        Stream<StringVisitable> var10000 = list.stream();
         return (float) var10000.mapToDouble(textHandler::getWidth).max().orElse(0.0D);
     }
     
@@ -245,7 +247,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         int p;
         int var10003;
         TextRenderer var20;
-        StringRenderable var21;
+        OrderedText var21;
         float var22;
         if (bl2) {
             for (p = 0; p < this.description.size(); ++p) {
