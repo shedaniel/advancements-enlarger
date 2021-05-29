@@ -15,6 +15,7 @@ import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementDisplay;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.client.util.math.MatrixStack;
@@ -99,7 +100,7 @@ public class BiggerAdvancementTab extends DrawableHelper {
             this.initialized = true;
         }
         
-        RenderSystem.pushMatrix();
+        matrices.push();
         RenderSystem.enableDepthTest();
         matrices.translate(0.0F, 0.0F, 950.0F);
         RenderSystem.colorMask(false, false, false, false);
@@ -110,10 +111,11 @@ public class BiggerAdvancementTab extends DrawableHelper {
         fill(matrices, width, height, 0, 0, -16777216);
         RenderSystem.depthFunc(515);
         Identifier identifier = this.display.getBackground();
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
         if (identifier != null) {
-            this.client.getTextureManager().bindTexture(identifier);
+            RenderSystem.setShaderTexture(0, identifier);
         } else {
-            this.client.getTextureManager().bindTexture(TextureManager.MISSING_IDENTIFIER);
+            RenderSystem.setShaderTexture(0, TextureManager.MISSING_IDENTIFIER);
         }
         
         int i = MathHelper.floor(this.originX);
@@ -137,7 +139,7 @@ public class BiggerAdvancementTab extends DrawableHelper {
         RenderSystem.colorMask(true, true, true, true);
         matrices.translate(0.0F, 0.0F, 950.0F);
         RenderSystem.depthFunc(515);
-        RenderSystem.popMatrix();
+        matrices.pop();
     }
     
     public void drawWidgetTooltip(MatrixStack matrices, int mouseX, int mouseY, int x, int y) {
@@ -176,11 +178,11 @@ public class BiggerAdvancementTab extends DrawableHelper {
         int width = screen.width - 34;
         int height = screen.height - 68;
         if (this.maxPanX - this.minPanX > width) {
-            move(amount, 0);
+            move(amount * 10, 0);
             return;
         }
         if (this.maxPanY - this.minPanY > height) {
-            move(0, amount);
+            move(0, amount * 10);
         }
     }
     

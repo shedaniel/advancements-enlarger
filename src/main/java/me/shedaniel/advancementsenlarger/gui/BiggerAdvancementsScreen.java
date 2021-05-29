@@ -5,6 +5,7 @@
 
 package me.shedaniel.advancementsenlarger.gui;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.loader.api.FabricLoader;
@@ -13,20 +14,18 @@ import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientAdvancementManager;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.NarratorManager;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.network.packet.c2s.play.AdvancementTabC2SPacket;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Lazy;
 
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 public class BiggerAdvancementsScreen extends Screen implements ClientAdvancementManager.Listener {
     private static final Identifier WINDOW_TEXTURE = new Identifier("advancements-enlarger:textures/gui/advancements/recipecontainer.png");
@@ -37,7 +36,7 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
     private final Map<Advancement, BiggerAdvancementTab> tabs = Maps.newLinkedHashMap();
     private BiggerAdvancementTab selectedTab;
     private boolean movingTab;
-    private Lazy<Boolean> reiExists = new Lazy<>(() -> FabricLoader.getInstance().isModLoaded("roughlyenoughitems"));
+    private Supplier<Boolean> reiExists = Suppliers.memoize(() -> FabricLoader.getInstance().isModLoaded("roughlyenoughitems"));
     private BooleanSupplier darkMode = () -> {
         if (!reiExists.get())
             return false;
@@ -165,11 +164,11 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
     }
     
     public void drawWidgets(MatrixStack matrices, int x, int i) {
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
         drawWindow(matrices, x, i);
         if (this.tabs.size() > 1) {
-            this.client.getTextureManager().bindTexture(isDarkMode() ? TABS_DARK_TEXTURE : TABS_TEXTURE);
+            RenderSystem.setShaderTexture(0, isDarkMode() ? TABS_DARK_TEXTURE : TABS_TEXTURE);
             Iterator<BiggerAdvancementTab> var3 = this.tabs.values().iterator();
             
             BiggerAdvancementTab advancementTab2;
@@ -178,13 +177,12 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
                 advancementTab2.drawBackground(matrices, x, i, advancementTab2 == this.selectedTab);
             }
             
-            RenderSystem.enableRescaleNormal();
             RenderSystem.defaultBlendFunc();
             var3 = this.tabs.values().iterator();
             
             while (var3.hasNext()) {
                 advancementTab2 = var3.next();
-                advancementTab2.drawIcon(matrices,x, i, this.itemRenderer);
+                advancementTab2.drawIcon(matrices, x, i, this.itemRenderer);
             }
             
             RenderSystem.disableBlend();
@@ -195,7 +193,7 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
     
     private void drawWindow(MatrixStack matrices, int x, int y) {
         boolean darkMode = isDarkMode();
-        this.client.getTextureManager().bindTexture(!darkMode ? WINDOW_TEXTURE : WINDOW_DARK_TEXTURE);
+        RenderSystem.setShaderTexture(0, !darkMode ? WINDOW_TEXTURE : WINDOW_DARK_TEXTURE);
         int width = this.width - 16;
         int height = this.height - 41;
         //Four Corners
@@ -222,43 +220,36 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         fillGradient(matrices, x + 4, y + height - 9, x + width - 4, y + height - 4, color, color);
         RenderSystem.disableTexture();
         RenderSystem.enableBlend();
-        RenderSystem.disableAlphaTest();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.shadeModel(7425);
         Tessellator tessellator = Tessellator.getInstance();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         BufferBuilder bufferBuilder = tessellator.getBuffer();
-        bufferBuilder.begin(7, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(x + width - 9, y + 18, getZOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + 18, getZOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + 24, getZOffset()).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(x + width - 9, y + 24, getZOffset()).color(0, 0, 0, 0).next();
+        int zOffset = getZOffset();
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        bufferBuilder.vertex(x + width - 9, y + 18, zOffset).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 9, y + 18, zOffset).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 9, y + 24, zOffset).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9, y + 24, zOffset).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9, y + height - 9 - 9, zOffset).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + 9, y + height - 9 - 9, zOffset).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + 9, y + height - 9, zOffset).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + width - 9, y + height - 9, zOffset).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 15, y + 18, zOffset).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + 9, y + 18, zOffset).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 9, y + height - 9, zOffset).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + 15, y + height - 9, zOffset).color(0, 0, 0, 0).next();
+        
+        bufferBuilder.vertex(x + width - 9, y + 18, zOffset).color(0, 0, 0, 150).next();
+        bufferBuilder.vertex(x + width - 9 - 9, y + 18, zOffset).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9 - 9, y + height - 9, zOffset).color(0, 0, 0, 0).next();
+        bufferBuilder.vertex(x + width - 9, y + height - 9, zOffset).color(0, 0, 0, 150).next();
         tessellator.draw();
-        bufferBuilder.begin(7, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(x + width - 9, y + height - 9, getZOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + height - 9, getZOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + height - 15, getZOffset()).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(x + width - 9, y + height - 15, getZOffset()).color(0, 0, 0, 0).next();
-        tessellator.draw();
-        bufferBuilder.begin(7, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(x + 15, y + 18, getZOffset()).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(x + 9, y + 18, getZOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 9, y + height - 9, getZOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + 15, y + height - 9, getZOffset()).color(0, 0, 0, 0).next();
-        tessellator.draw();
-        bufferBuilder.begin(7, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(x + width - 15, y + 18, getZOffset()).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(x + width - 9, y + 18, getZOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + width - 9, y + height - 9, getZOffset()).color(0, 0, 0, 150).next();
-        bufferBuilder.vertex(x + width - 15, y + height - 9, getZOffset()).color(0, 0, 0, 0).next();
-        tessellator.draw();
-        RenderSystem.shadeModel(7424);
         RenderSystem.disableBlend();
-        RenderSystem.enableAlphaTest();
         RenderSystem.enableTexture();
     }
     
     private void drawWidgetTooltip(MatrixStack matrices, int mouseX, int mouseY, int x, int y) {
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         if (this.selectedTab != null) {
             matrices.push();
             RenderSystem.enableDepthTest();

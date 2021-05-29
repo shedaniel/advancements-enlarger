@@ -18,7 +18,6 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.advancement.AdvancementObtainedStatus;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
@@ -26,6 +25,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vector4f;
 
 import java.util.Iterator;
 import java.util.List;
@@ -152,7 +152,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
                 advancementObtainedStatus2 = AdvancementObtainedStatus.UNOBTAINED;
             }
             
-            this.client.getTextureManager().bindTexture(WIDGETS_TEX);
+            RenderSystem.setShaderTexture(0, WIDGETS_TEX);
             this.drawTexture(matrices, x + this.xPos + 3, y + this.yPos, this.display.getFrame().texV(), 128 + advancementObtainedStatus2.getSpriteIndex() * 26, 26, 26);
             Vector4f vector4f = new Vector4f(x + this.xPos + 8, y + this.yPos + 5, 0, 1.0F);
             vector4f.transform(matrices.peek().getModel());
@@ -208,8 +208,8 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         }
         
         int k = this.width - j;
-        this.client.getTextureManager().bindTexture(WIDGETS_TEX);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, WIDGETS_TEX);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
         int l = originY + this.yPos;
         int n;
