@@ -1,10 +1,11 @@
 plugins {
-    id 'fabric-loom' version "0.8-SNAPSHOT"
+    id 'fabric-loom' version "0.12-SNAPSHOT"
     id 'maven-publish'
-    id 'org.cadixdev.licenser' version '0.6.0'
+    id 'org.cadixdev.licenser' version '0.6.1'
 }
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -15,9 +16,6 @@ license {
     include '**/*.java'
 }
 
-minecraft {
-}
-
 repositories {
     maven { url "https://maven.shedaniel.me" }
 }
@@ -25,16 +23,16 @@ repositories {
 dependencies {
     //to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "me.shedaniel:legacy-yarn:${project.yarn_mappings}:v2"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modApi "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    modApi "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
     compileOnly "com.google.code.findbugs:jsr305:3.0.2"
-    compileOnly 'org.jetbrains:annotations:19.0.0'
+    compileOnly 'org.jetbrains:annotations:23.0.0'
 }
 
 processResources {
@@ -47,34 +45,15 @@ processResources {
 
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
+    options.release.set(17)
 }
 
 jar {
     from "LICENSE"
+    from "README.md"
+    archiveVersion.set(project.version + "-" + minecraft_version)
 }
 
-// configure the maven publication
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
-        }
-    }
-
-    // select the repositories you want to publish to
-    repositories {
-        // uncomment to publish to the local maven
-        // mavenLocal()
-    }
+remapJar {
+    archiveVersion.set(project.version + "-" + minecraft_version)
 }
