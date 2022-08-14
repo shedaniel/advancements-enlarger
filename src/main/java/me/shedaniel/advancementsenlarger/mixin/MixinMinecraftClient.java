@@ -26,13 +26,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinMinecraftClient {
     @Shadow public ClientPlayerEntity player;
     
-    @Inject(method = "openScreen", at = @At("HEAD"))
+    @Inject(method = "setScreen", at = @At("HEAD"))
     private void dummyGenerateRefmap(Screen screen, CallbackInfo ci) {
         // NO-OP this injection is only here to generate the refmap
     }
     
-    @ModifyVariable(method = "openScreen", at = @At("HEAD"), argsOnly = true)
-    private Screen openScreen(Screen screen) {
+    @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
+    private Screen setScreen(Screen screen) {
         if (screen != null && AdvancementsScreen.class == screen.getClass())
             return new BiggerAdvancementsScreen(player.networkHandler.getAdvancementHandler());
         return screen;
