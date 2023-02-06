@@ -222,7 +222,7 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         Tessellator tessellator = Tessellator.getInstance();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         BufferBuilder bufferBuilder = tessellator.getBuffer();
         int zOffset = getZOffset();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
