@@ -218,13 +218,12 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         fillGradient(matrices, x + 4, y + 4, x + 9, y + height - 4, color, color);
         fillGradient(matrices, x + width - 9, y + 4, x + width - 4, y + height - 4, color, color);
         fillGradient(matrices, x + 4, y + height - 9, x + width - 4, y + height - 4, color, color);
-        RenderSystem.disableTexture();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         Tessellator tessellator = Tessellator.getInstance();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         BufferBuilder bufferBuilder = tessellator.getBuffer();
-        int zOffset = getZOffset();
+        int zOffset = 0;
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         bufferBuilder.vertex(x + width - 9, y + 18, zOffset).color(0, 0, 0, 150).next();
         bufferBuilder.vertex(x + 9, y + 18, zOffset).color(0, 0, 0, 150).next();
@@ -245,7 +244,6 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         bufferBuilder.vertex(x + width - 9, y + height - 9, zOffset).color(0, 0, 0, 150).next();
         tessellator.draw();
         RenderSystem.disableBlend();
-        RenderSystem.enableTexture();
     }
 
     private void drawWidgetTooltip(MatrixStack matrices, int mouseX, int mouseY, int x, int y) {

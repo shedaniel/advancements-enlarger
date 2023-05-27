@@ -25,7 +25,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
 import net.minecraft.util.math.MathHelper;
-import org.joml.Vector4f;
 
 import java.util.Iterator;
 import java.util.List;
@@ -154,11 +153,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
 
             RenderSystem.setShaderTexture(0, WIDGETS_TEX);
             this.drawTexture(matrices, x + this.xPos + 3, y + this.yPos, this.display.getFrame().getTextureV(), 128 + advancementObtainedStatus2.getSpriteIndex() * 26, 26, 26);
-            Vector4f vector4f = new Vector4f(x + this.xPos + 8, y + this.yPos + 5, 0, 1.0F);
-            vector4f.mul(matrices.peek().getPositionMatrix());
-            this.client.getItemRenderer().zOffset += vector4f.z();
-            this.client.getItemRenderer().renderInGui(this.display.getIcon(), (int) vector4f.x(), (int) vector4f.y());
-            this.client.getItemRenderer().zOffset -= vector4f.z();
+            this.client.getItemRenderer().renderInGui(matrices, this.display.getIcon(), x + this.xPos + 8, y + this.yPos + 5);
         }
 
         for (BiggerAdvancementWidget advancementWidget : this.children) {
@@ -267,11 +262,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
             }
         }
 
-        Vector4f vector4f = new Vector4f(originX + this.xPos + 8, originY + this.yPos + 5, 0, 1.0F);
-        vector4f.mul(matrices.peek().getPositionMatrix());
-        this.client.getItemRenderer().zOffset += vector4f.z();
-        this.client.getItemRenderer().renderInGui(this.display.getIcon(), (int) vector4f.x(), (int) vector4f.y());
-        this.client.getItemRenderer().zOffset -= vector4f.z();
+        this.client.getItemRenderer().renderInGui(matrices, this.display.getIcon(), originX + this.xPos + 8, originY + this.yPos + 5);
     }
 
     protected void method_2324(MatrixStack matrices, int i, int j, int k, int l, int m, int n, int o, int p, int q) {
