@@ -10,7 +10,7 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.Vector4f;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -48,10 +48,10 @@ public abstract class MixinAdvancementTabType implements AdvancementTabTypeHooks
         int i = x + (this.width + 2) * index + 6;
         int j = y + -this.height + 4 + 9;
         Vector4f vector4f = new Vector4f(i, j, 0, 1.0F);
-        vector4f.transform(matrices.peek().getPositionMatrix());
-        itemRenderer.zOffset += vector4f.getZ();
-        itemRenderer.renderInGui(icon, (int) vector4f.getX(), (int) vector4f.getY());
-        itemRenderer.zOffset += vector4f.getZ();
+        vector4f.mul(matrices.peek().getPositionMatrix());
+        itemRenderer.zOffset += vector4f.z();
+        itemRenderer.renderInGui(icon, (int) vector4f.x(), (int) vector4f.y());
+        itemRenderer.zOffset += vector4f.z();
     }
     
     @Override
