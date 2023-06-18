@@ -15,9 +15,8 @@ import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.advancement.AdvancementObtainedStatus;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
@@ -32,7 +31,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
-public class BiggerAdvancementWidget extends DrawableHelper {
+public class BiggerAdvancementWidget {
     private static final int[] field_24262 = new int[]{0, 10, -10, 25, -25};
     private static final Identifier WIDGETS_TEX = new Identifier("textures/gui/advancements/widgets.png");
     private static final Pattern BACKSLASH_S_PATTERN = Pattern.compile("(.+) \\S+");
@@ -112,7 +111,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         }
     }
 
-    public void renderLines(MatrixStack matrices, int x, int y, boolean firstPass) {
+    public void renderLines(DrawContext context, int x, int y, boolean firstPass) {
         if (this.parent != null) {
             int i = x + this.parent.xPos + 13;
             int j = x + this.parent.xPos + 26 + 4;
@@ -121,27 +120,27 @@ public class BiggerAdvancementWidget extends DrawableHelper {
             int m = y + this.yPos + 13;
             int n = firstPass ? -16777216 : -1;
             if (firstPass) {
-                this.drawHorizontalLine(matrices, j, i, k - 1, n);
-                this.drawHorizontalLine(matrices, j + 1, i, k, n);
-                this.drawHorizontalLine(matrices, j, i, k + 1, n);
-                this.drawHorizontalLine(matrices, l, j - 1, m - 1, n);
-                this.drawHorizontalLine(matrices, l, j - 1, m, n);
-                this.drawHorizontalLine(matrices, l, j - 1, m + 1, n);
-                this.drawVerticalLine(matrices, j - 1, m, k, n);
-                this.drawVerticalLine(matrices, j + 1, m, k, n);
+                context.drawHorizontalLine(j, i, k - 1, n);
+                context.drawHorizontalLine(j + 1, i, k, n);
+                context.drawHorizontalLine(j, i, k + 1, n);
+                context.drawHorizontalLine(l, j - 1, m - 1, n);
+                context.drawHorizontalLine(l, j - 1, m, n);
+                context.drawHorizontalLine(l, j - 1, m + 1, n);
+                context.drawVerticalLine(j - 1, m, k, n);
+                context.drawVerticalLine(j + 1, m, k, n);
             } else {
-                this.drawHorizontalLine(matrices, j, i, k, n);
-                this.drawHorizontalLine(matrices, l, j, m, n);
-                this.drawVerticalLine(matrices, j, m, k, n);
+                context.drawHorizontalLine(j, i, k, n);
+                context.drawHorizontalLine(l, j, m, n);
+                context.drawVerticalLine(j, m, k, n);
             }
         }
 
         for (BiggerAdvancementWidget advancementWidget : this.children) {
-            advancementWidget.renderLines(matrices, x, y, firstPass);
+            advancementWidget.renderLines(context, x, y, firstPass);
         }
     }
 
-    public void renderWidgets(MatrixStack matrices, int x, int y) {
+    public void renderWidgets(DrawContext context, int x, int y) {
         if (!this.display.isHidden() || this.progress != null && this.progress.isDone()) {
             float f = this.progress == null ? 0.0F : this.progress.getProgressBarPercentage();
             AdvancementObtainedStatus advancementObtainedStatus2;
@@ -151,13 +150,12 @@ public class BiggerAdvancementWidget extends DrawableHelper {
                 advancementObtainedStatus2 = AdvancementObtainedStatus.UNOBTAINED;
             }
 
-            RenderSystem.setShaderTexture(0, WIDGETS_TEX);
-            this.drawTexture(matrices, x + this.xPos + 3, y + this.yPos, this.display.getFrame().getTextureV(), 128 + advancementObtainedStatus2.getSpriteIndex() * 26, 26, 26);
-            this.client.getItemRenderer().renderInGui(matrices, this.display.getIcon(), x + this.xPos + 8, y + this.yPos + 5);
+            context.drawTexture(WIDGETS_TEX, x + this.xPos + 3, y + this.yPos, this.display.getFrame().getTextureV(), 128 + advancementObtainedStatus2.getSpriteIndex() * 26, 26, 26);
+            context.drawItemWithoutEntity(this.display.getIcon(), x + this.xPos + 8, y + this.yPos + 5);
         }
 
         for (BiggerAdvancementWidget advancementWidget : this.children) {
-            advancementWidget.renderWidgets(matrices, x, y);
+            advancementWidget.renderWidgets(context, x, y);
         }
     }
 
@@ -169,7 +167,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         this.children.add(widget);
     }
 
-    public void drawTooltip(MatrixStack matrices, int originX, int originY, float alpha, int x, int y) {
+    public void drawTooltip(DrawContext context, int originX, int originY, float alpha, int x, int y) {
         boolean bl = x + originX + this.xPos + this.width + 26 >= this.tab.getScreen().width;
         String string = this.progress == null ? null : this.progress.getProgressBarFraction();
         int i = string == null ? 0 : this.client.textRenderer.getWidth(string);
@@ -218,24 +216,24 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         int o = 32 + var10001 * 9;
         if (!this.description.isEmpty()) {
             if (bl2) {
-                this.method_2324(matrices, n, l + 26 - o, this.width, o, 10, 200, 26, 0, 52);
+                this.method_2324(context, WIDGETS_TEX, n, l + 26 - o, this.width, o, 10, 200, 26, 0, 52);
             } else {
-                this.method_2324(matrices, n, l, this.width, o, 10, 200, 26, 0, 52);
+                this.method_2324(context, WIDGETS_TEX, n, l, this.width, o, 10, 200, 26, 0, 52);
             }
         }
 
-        this.drawTexture(matrices, n, l, 0, advancementObtainedStatus10.getSpriteIndex() * 26, j, 26);
-        this.drawTexture(matrices, n + j, l, 200 - k, advancementObtainedStatus11.getSpriteIndex() * 26, k, 26);
-        this.drawTexture(matrices, originX + this.xPos + 3, originY + this.yPos, this.display.getFrame().getTextureV(), 128 + advancementObtainedStatus12.getSpriteIndex() * 26, 26, 26);
+        context.drawTexture(WIDGETS_TEX, n, l, 0, advancementObtainedStatus10.getSpriteIndex() * 26, j, 26);
+        context.drawTexture(WIDGETS_TEX, n + j, l, 200 - k, advancementObtainedStatus11.getSpriteIndex() * 26, k, 26);
+        context.drawTexture(WIDGETS_TEX, originX + this.xPos + 3, originY + this.yPos, this.display.getFrame().getTextureV(), 128 + advancementObtainedStatus12.getSpriteIndex() * 26, 26, 26);
         if (bl) {
-            this.client.textRenderer.drawWithShadow(matrices, this.title, (float) (n + 5), (float) (originY + this.yPos + 9), -1);
+            context.drawTextWithShadow(this.client.textRenderer, this.title, n + 5, originY + this.yPos + 9, -1);
             if (string != null) {
-                this.client.textRenderer.drawWithShadow(matrices, string, (float) (originX + this.xPos - i), (float) (originY + this.yPos + 9), -1);
+                context.drawTextWithShadow(this.client.textRenderer, string, originX + this.xPos - i, originY + this.yPos + 9, -1);
             }
         } else {
-            this.client.textRenderer.drawWithShadow(matrices, this.title, (float) (originX + this.xPos + 32), (float) (originY + this.yPos + 9), -1);
+            context.drawTextWithShadow(this.client.textRenderer, this.title, originX + this.xPos + 32, originY + this.yPos + 9, -1);
             if (string != null) {
-                this.client.textRenderer.drawWithShadow(matrices, string, (float) (originX + this.xPos + this.width - i - 5), (float) (originY + this.yPos + 9), -1);
+                context.drawTextWithShadow(this.client.textRenderer, string, originX + this.xPos + this.width - i - 5, originY + this.yPos + 9, -1);
             }
         }
 
@@ -243,41 +241,41 @@ public class BiggerAdvancementWidget extends DrawableHelper {
         int var10003;
         TextRenderer var20;
         OrderedText var21;
-        float var22;
+        int var22;
         if (bl2) {
             for (p = 0; p < this.description.size(); ++p) {
                 var20 = this.client.textRenderer;
                 var21 = this.description.get(p);
-                var22 = (float) (n + 5);
+                var22 = n + 5;
                 var10003 = l + 26 - o + 7;
-                var20.draw(matrices, var21, var22, (float) (var10003 + p * 9), -5592406);
+                context.drawText(var20, var21, var22, var10003 + p * 9, -5592406, false);
             }
         } else {
             for (p = 0; p < this.description.size(); ++p) {
                 var20 = this.client.textRenderer;
                 var21 = this.description.get(p);
-                var22 = (float) (n + 5);
+                var22 = n + 5;
                 var10003 = originY + this.yPos + 9 + 17;
-                var20.draw(matrices, var21, var22, (float) (var10003 + p * 9), -5592406);
+                context.drawText(var20, var21, var22, var10003 + p * 9, -5592406, false);
             }
         }
 
-        this.client.getItemRenderer().renderInGui(matrices, this.display.getIcon(), originX + this.xPos + 8, originY + this.yPos + 5);
+        context.drawItemWithoutEntity(this.display.getIcon(), originX + this.xPos + 8, originY + this.yPos + 5);
     }
 
-    protected void method_2324(MatrixStack matrices, int i, int j, int k, int l, int m, int n, int o, int p, int q) {
-        this.drawTexture(matrices, i, j, p, q, m, m);
-        this.method_2321(matrices, i + m, j, k - m - m, m, p + m, q, n - m - m, o);
-        this.drawTexture(matrices, i + k - m, j, p + n - m, q, m, m);
-        this.drawTexture(matrices, i, j + l - m, p, q + o - m, m, m);
-        this.method_2321(matrices, i + m, j + l - m, k - m - m, m, p + m, q + o - m, n - m - m, o);
-        this.drawTexture(matrices, i + k - m, j + l - m, p + n - m, q + o - m, m, m);
-        this.method_2321(matrices, i, j + m, m, l - m - m, p, q + m, n, o - m - m);
-        this.method_2321(matrices, i + m, j + m, k - m - m, l - m - m, p + m, q + m, n - m - m, o - m - m);
-        this.method_2321(matrices, i + k - m, j + m, m, l - m - m, p + n - m, q + m, n, o - m - m);
+    protected void method_2324(DrawContext context, Identifier texture, int i, int j, int k, int l, int m, int n, int o, int p, int q) {
+        context.drawTexture(texture, i, j, p, q, m, m);
+        this.method_2321(context, texture, i + m, j, k - m - m, m, p + m, q, n - m - m, o);
+        context.drawTexture(texture, i + k - m, j, p + n - m, q, m, m);
+        context.drawTexture(texture, i, j + l - m, p, q + o - m, m, m);
+        this.method_2321(context, texture, i + m, j + l - m, k - m - m, m, p + m, q + o - m, n - m - m, o);
+        context.drawTexture(texture, i + k - m, j + l - m, p + n - m, q + o - m, m, m);
+        this.method_2321(context, texture, i, j + m, m, l - m - m, p, q + m, n, o - m - m);
+        this.method_2321(context, texture, i + m, j + m, k - m - m, l - m - m, p + m, q + m, n - m - m, o - m - m);
+        this.method_2321(context, texture, i + k - m, j + m, m, l - m - m, p + n - m, q + m, n, o - m - m);
     }
 
-    protected void method_2321(MatrixStack matrices, int i, int j, int k, int l, int m, int n, int o, int p) {
+    protected void method_2321(DrawContext context, Identifier texture, int i, int j, int k, int l, int m, int n, int o, int p) {
         for (int q = 0; q < k; q += o) {
             int r = i + q;
             int s = Math.min(o, k - q);
@@ -285,7 +283,7 @@ public class BiggerAdvancementWidget extends DrawableHelper {
             for (int t = 0; t < l; t += p) {
                 int u = j + t;
                 int v = Math.min(p, l - t);
-                this.drawTexture(matrices, r, u, m, n, s, v);
+                context.drawTexture(texture, r, u, m, n, s, v);
             }
         }
 
