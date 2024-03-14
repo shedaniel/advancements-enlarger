@@ -6,7 +6,10 @@
 package me.shedaniel.advancementsenlarger.mixin;
 
 import me.shedaniel.advancementsenlarger.hooks.AdvancementTabTypeHooks;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.advancement.AdvancementTabType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import org.joml.Vector4f;
@@ -19,7 +22,11 @@ public abstract class MixinAdvancementTabType implements AdvancementTabTypeHooks
 
     @Shadow
     @Final
-    private int u;
+    private AdvancementTabType.Textures selectedTextures;
+
+    @Shadow
+    @Final
+    private AdvancementTabType.Textures unselectedTextures;
 
     @Shadow
     @Final
@@ -31,32 +38,27 @@ public abstract class MixinAdvancementTabType implements AdvancementTabTypeHooks
 
     @Shadow
     @Final
-    private int v;
-
-    @Shadow
-    @Final
     private int height;
 
     @Override
-    public void ae_drawBackground(DrawContext context, Identifier texture, int x, int y, boolean selected, int index) {
-        int i = this.u;
-        if (index > 0) {
-            i += this.width;
+    public void ae_drawBackground(DrawContext context, int x, int y, boolean selected, int index) {
+        AdvancementTabType.Textures textures = selected ? selectedTextures : unselectedTextures;
+        Identifier identifier;
+        if (index == 0) {
+            identifier = textures.first();
+        } else if (index == this.tabCount - 1) {
+            identifier = textures.last();
+        } else {
+            identifier = textures.middle();
         }
 
-        if (index == this.tabCount - 1) {
-            i += this.width;
-        }
-
-        int j = selected ? this.v + this.height : this.v;
-        context.drawTexture(texture, x + (this.width + 2) * index, y + -this.height + 4, i, j, this.width, this.height);
+        context.drawGuiTexture(identifier, x + (this.width + 2) * index, y + -this.height + 4, this.width, this.height);
     }
 
     @Override
     public void ae_drawIcon(DrawContext context, int x, int y, int index, ItemStack icon) {
         int i = x + (this.width + 2) * index + 6;
         int j = y + -this.height + 4 + 9;
-        Vector4f vector4f = new Vector4f(i, j, 0, 1.0F);
         context.drawItemWithoutEntity(icon, i, j);
     }
 
