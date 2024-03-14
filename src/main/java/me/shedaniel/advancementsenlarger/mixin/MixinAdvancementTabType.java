@@ -52,7 +52,7 @@ public abstract class MixinAdvancementTabType implements AdvancementTabTypeHooks
             identifier = textures.middle();
         }
 
-        context.drawGuiTexture(identifier, x + (this.width + 4) * index, y + -this.height + 4, this.width, this.height);
+        context.drawGuiTexture(identifier, x + (this.width + 2) * index, y + -this.height + 4, this.width, this.height);
     }
 
     @Override
