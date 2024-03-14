@@ -41,7 +41,7 @@ public abstract class MixinAdvancementTabType implements AdvancementTabTypeHooks
     private int height;
 
     @Override
-    public void ae_drawBackground(DrawContext context, Identifier texture, int x, int y, boolean selected, int index) {
+    public void ae_drawBackground(DrawContext context, int x, int y, boolean selected, int index) {
         AdvancementTabType.Textures textures = selected ? selectedTextures : unselectedTextures;
         Identifier identifier;
         if (index == 0) {

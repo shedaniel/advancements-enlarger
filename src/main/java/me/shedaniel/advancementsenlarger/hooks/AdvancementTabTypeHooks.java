@@ -10,7 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 
 public interface AdvancementTabTypeHooks {
-    void ae_drawBackground(DrawContext context, Identifier texture, int x, int y, boolean selected, int index);
+    void ae_drawBackground(DrawContext context, int x, int y, boolean selected, int index);
     
     void ae_drawIcon(DrawContext context, int x, int y, int index, ItemStack icon);
     

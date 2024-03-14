@@ -89,8 +89,8 @@ public class BiggerAdvancementTab {
         return this.title;
     }
 
-    public void drawBackground(DrawContext context, Identifier texture, int x, int y, boolean selected) {
-        this.type.ae_drawBackground(context, texture, x, y, selected, this.index);
+    public void drawBackground(DrawContext context, int x, int y, boolean selected) {
+        this.type.ae_drawBackground(context, x, y, selected, this.index);
     }
 
     public void drawIcon(DrawContext context, int x, int y) {

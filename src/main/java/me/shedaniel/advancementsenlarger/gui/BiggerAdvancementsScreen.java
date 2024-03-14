@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 public class BiggerAdvancementsScreen extends Screen implements ClientAdvancementManager.Listener {
     private static final Identifier WINDOW_TEXTURE = new Identifier("advancements-enlarger:textures/gui/advancements/recipecontainer.png");
     private static final Identifier WINDOW_DARK_TEXTURE = new Identifier("advancements-enlarger:textures/gui/advancements/recipecontainer_dark.png");
-    private static final Identifier TABS_TEXTURE = new Identifier("textures/gui/advancements/tabs.png");
+    // TODO: not sure how this is done now since the tab textures aren't all in one file anymore
     private static final Identifier TABS_DARK_TEXTURE = new Identifier("advancements-enlarger:textures/gui/advancements/tabs_dark.png");
     private final ClientAdvancementManager advancementHandler;
     private final Map<AdvancementEntry, BiggerAdvancementTab> tabs = Maps.newLinkedHashMap();
@@ -168,33 +168,29 @@ public class BiggerAdvancementsScreen extends Screen implements ClientAdvancemen
         }
     }
 
-    public void drawWidgets(DrawContext context, int x, int i) {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+    public void drawWidgets(DrawContext context, int x, int y) {
+        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
-        drawWindow(context, x, i);
+        drawWindow(context, x, y);
         if (this.tabs.size() > 1) {
-            Identifier texture = isDarkMode() ? TABS_DARK_TEXTURE : TABS_TEXTURE;
-            RenderSystem.setShaderTexture(0, texture);
             Iterator<BiggerAdvancementTab> var3 = this.tabs.values().iterator();
 
             BiggerAdvancementTab advancementTab2;
             while (var3.hasNext()) {
                 advancementTab2 = var3.next();
-                advancementTab2.drawBackground(context, texture, x, i, advancementTab2 == this.selectedTab);
+                advancementTab2.drawBackground(context, x, y, advancementTab2 == this.selectedTab);
             }
 
-            RenderSystem.defaultBlendFunc();
             var3 = this.tabs.values().iterator();
 
             while (var3.hasNext()) {
                 advancementTab2 = var3.next();
-                advancementTab2.drawIcon(context, x, i);
+                advancementTab2.drawIcon(context, x, y);
             }
 
-            RenderSystem.disableBlend();
         }
 
-        context.drawText(this.textRenderer, Text.translatable("gui.advancements"), x + 8, i + 6, isDarkMode() ? -1 : 4210752, false);
+        context.drawText(this.textRenderer, Text.translatable("gui.advancements"), x + 8, y + 6, isDarkMode() ? -1 : 4210752, false);
     }
 
     private void drawWindow(DrawContext context, int x, int y) {
