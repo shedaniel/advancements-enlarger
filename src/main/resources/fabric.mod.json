@@ -17,5 +17,6 @@
   "environment": "client",
   "mixins": [
     "advancements-enlarger.mixins.json"
-  ]
+  ],
+  "accessWidener": "advancements-enlarger.accesswidener"
 }

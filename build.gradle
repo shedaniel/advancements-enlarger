@@ -57,3 +57,7 @@ jar {
 remapJar {
     archiveVersion.set(project.version + "-" + minecraft_version)
 }
+
+loom {
+    accessWidenerPath = file("src/main/resources/advancements-enlarger.accesswidener")
+}

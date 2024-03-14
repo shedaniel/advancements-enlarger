@@ -13,6 +13,8 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementDisplay;
+import net.minecraft.advancement.AdvancementEntry;
+import net.minecraft.advancement.PlacedAdvancement;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.GameRenderer;
@@ -28,6 +30,7 @@ import org.joml.Vector3i;
 import org.joml.Vector4f;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
 public class BiggerAdvancementTab {
@@ -35,12 +38,12 @@ public class BiggerAdvancementTab {
     private final BiggerAdvancementsScreen screen;
     private final AdvancementTabTypeHooks type;
     private final int index;
-    private final Advancement root;
+    private final PlacedAdvancement root;
     private final AdvancementDisplay display;
     private final ItemStack icon;
     private final Text title;
     private final BiggerAdvancementWidget rootWidget;
-    private final Map<Advancement, BiggerAdvancementWidget> widgets = Maps.newLinkedHashMap();
+    private final Map<AdvancementEntry, BiggerAdvancementWidget> widgets = Maps.newLinkedHashMap();
     private double originX;
     private double originY;
     private int minPanX = 2147483647;
@@ -50,7 +53,7 @@ public class BiggerAdvancementTab {
     private float alpha;
     private boolean initialized;
 
-    public BiggerAdvancementTab(MinecraftClient client, BiggerAdvancementsScreen screen, AdvancementTabTypeHooks type, int index, Advancement root, AdvancementDisplay display) {
+    public BiggerAdvancementTab(MinecraftClient client, BiggerAdvancementsScreen screen, AdvancementTabTypeHooks type, int index, PlacedAdvancement root, AdvancementDisplay display) {
         this.client = client;
         this.screen = screen;
         this.type = type;
@@ -60,24 +63,25 @@ public class BiggerAdvancementTab {
         this.icon = display.getIcon();
         this.title = display.getTitle();
         this.rootWidget = new BiggerAdvancementWidget(this, client, root, display);
-        this.addWidget(this.rootWidget, root);
+        this.addWidget(this.rootWidget, root.getAdvancementEntry());
     }
 
-    public static BiggerAdvancementTab create(MinecraftClient minecraft, BiggerAdvancementsScreen screen, int index, Advancement root)
+    public static BiggerAdvancementTab create(MinecraftClient minecraft, BiggerAdvancementsScreen screen, int index, PlacedAdvancement root)
             throws ClassNotFoundException {
-        if (root.getDisplay() != null) {
+        Optional<AdvancementDisplay> display = root.getAdvancement().display();
+        if (display.isPresent()) {
             Object[] var4 = Class.forName(FabricLoader.getInstance().getMappingResolver().mapClassName("intermediary", "net.minecraft.class_453")).getEnumConstants();
             int var5 = var4.length;
 
             for (Object o : var4) {
                 AdvancementTabTypeHooks advancementTabType = (AdvancementTabTypeHooks) o;
-                return new BiggerAdvancementTab(minecraft, screen, advancementTabType, index, root, root.getDisplay());
+                return new BiggerAdvancementTab(minecraft, screen, advancementTabType, index, root, display.get());
             }
         }
         return null;
     }
 
-    public Advancement getRoot() {
+    public PlacedAdvancement getRoot() {
         return this.root;
     }
 
@@ -109,7 +113,7 @@ public class BiggerAdvancementTab {
         context.enableScissor(Math.round(i1.x), Math.round(i1.y), Math.round(i2.x), Math.round(i2.y));
         context.getMatrices().push();
         context.fill(width, height, 0, 0, 0xff000000);
-        Identifier identifier = this.display.getBackground();
+        Identifier identifier = this.display.getBackground().orElse(null);
         RenderSystem.setShader(GameRenderer::getPositionTexProgram);
         if (identifier == null) {
             identifier = TextureManager.MISSING_IDENTIFIER;
@@ -197,14 +201,15 @@ public class BiggerAdvancementTab {
 
     }
 
-    public void addAdvancement(Advancement advancement) {
-        if (advancement.getDisplay() != null) {
-            BiggerAdvancementWidget advancementWidget = new BiggerAdvancementWidget(this, this.client, advancement, advancement.getDisplay());
-            this.addWidget(advancementWidget, advancement);
+    public void addAdvancement(PlacedAdvancement advancement) {
+        Optional<AdvancementDisplay> display = advancement.getAdvancement().display();
+        if (display.isPresent()) {
+            BiggerAdvancementWidget advancementWidget = new BiggerAdvancementWidget(this, this.client, advancement, display.get());
+            this.addWidget(advancementWidget, advancement.getAdvancementEntry());
         }
     }
 
-    private void addWidget(BiggerAdvancementWidget widget, Advancement advancement) {
+    private void addWidget(BiggerAdvancementWidget widget, AdvancementEntry advancement) {
         this.widgets.put(advancement, widget);
         int i = widget.getX();
         int j = i + 28;
@@ -220,7 +225,7 @@ public class BiggerAdvancementTab {
         }
     }
 
-    public BiggerAdvancementWidget getWidget(Advancement advancement) {
+    public BiggerAdvancementWidget getWidget(AdvancementEntry advancement) {
         return this.widgets.get(advancement);
     }
 
